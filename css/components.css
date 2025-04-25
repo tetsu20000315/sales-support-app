@@ -1,0 +1,147 @@
+/* 履歴ボタン */
+.history-button {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: background-color 0.3s, transform 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.history-button:hover {
+  background-color: #357abd;
+  transform: rotate(30deg);
+}
+
+.history-button i {
+  font-size: 18px;
+}
+
+/* 履歴メニュー */
+.history-menu {
+  position: fixed;
+  top: 60px;
+  right: 15px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  display: none;
+  z-index: 1000;
+}
+
+.history-menu.show {
+  display: block;
+}
+
+/* ステップ6の選択肢用のスタイル */
+#step6 .input-box button {
+  margin-bottom: 10px;
+}
+
+/* 回答内容 */
+#answerSummary {
+  padding: 15px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
+
+/* プラン推奨 */
+#planRecommendation > div {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  margin-top: 15px;
+}
+
+#planRecommendation > div:first-child {
+  margin-top: 0;
+}
+
+/* エラーメッセージのスタイル */
+#errorMsg {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff4444;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  display: none;
+  max-width: 90%;
+  text-align: center;
+}
+
+#errorMsg.show {
+  display: block;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+#errorMsg.hide {
+  opacity: 0;
+  transform: translate(-50%, -20px);
+}
+
+/* 入力エラーのスタイル */
+.input-error {
+  border-color: #ff4444 !important;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* 無効なボタンのスタイル */
+button:disabled {
+  background-color: #cccccc !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ローディングインジケータのスタイル */
+.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 質問画面のコンテナ */
+[id^="step"] {
+  position: relative;
+  padding-top: 50px;
+}
