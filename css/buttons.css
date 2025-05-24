@@ -141,3 +141,23 @@
 .top-button:hover {
   background-color: #357abd;
 }
+
+/* 次へボタン */
+.next-button {
+  background-color: #4a90e2;
+  color: white;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  width: 100%;
+  max-width: 300px;
+  margin: 20px auto;
+  display: block;
+  transition: background-color 0.3s;
+}
+
+.next-button:hover {
+  background-color: #357abd;
+}

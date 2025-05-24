@@ -43,6 +43,32 @@ const questions = {
     title: '現在の料金プランに満足していますか？',
     type: 'choice',
     choices: ['とても満足', '満足', '普通', '不満', 'とても不満']
+  },
+  // 3分診断用の追加質問
+  callTime: {
+    title: '1日の平均通話時間を教えてください',
+    type: 'choice',
+    choices: ['ほとんどなし', '5分未満', '5～15分', '15～30分', '30分以上']
+  },
+  location: {
+    title: '主な利用場所を教えてください',
+    type: 'choice',
+    choices: ['自宅', '会社・学校', '外出先', 'その他']
+  },
+  apps: {
+    title: 'よく使うアプリを教えてください',
+    type: 'multi-choice',
+    choices: ['LINE', 'Twitter', 'Instagram', 'Facebook', 'YouTube', 'TikTok', 'オンラインゲーム', '地図アプリ', '特になし']
+  },
+  contract: {
+    title: '契約期間を教えてください',
+    type: 'choice',
+    choices: ['1年未満', '1～2年', '2～3年', '3年以上']
+  },
+  payment: {
+    title: '端末の支払い方法を教えてください',
+    type: 'choice',
+    choices: ['一括払い', '分割払い', '端末代なし']
   }
 };
 
@@ -55,6 +81,12 @@ function showQuestion(questionId) {
   document.querySelectorAll('.question-screen').forEach(screen => {
     screen.style.display = 'none';
   });
+  
+  // 既存の進捗バーを削除
+  const existingProgress = document.querySelector('.progress-container');
+  if (existingProgress) {
+    existingProgress.remove();
+  }
   
   let questionElement;
   
@@ -84,8 +116,38 @@ function showQuestion(questionId) {
       break;
   }
   
+  // 進捗バーを作成して表示
+  const progressTemplate = document.getElementById('progress-template');
+  const progressElement = progressTemplate.content.cloneNode(true);
+  document.body.appendChild(progressElement);
+  
+  // 進捗バーを更新
+  updateProgress(questionId);
+  
   container.appendChild(questionElement);
   questionElement.style.display = 'block';
+}
+
+// 進捗バーを更新する関数
+function updateProgress(questionId) {
+  const questionKeys = Object.keys(questions);
+  const currentIndex = questionKeys.indexOf(questionId);
+  const totalQuestions = diagnosisType === 'quick' ? 6 : 11;
+  const progress = ((currentIndex + 1) / totalQuestions) * 100;
+  
+  // 進捗バーの幅を更新
+  const progressFill = document.querySelector('.progress-fill');
+  if (progressFill) {
+    progressFill.style.width = `${progress}%`;
+  }
+  
+  // 質問番号を更新
+  const currentStep = document.querySelector('.current-step');
+  const totalSteps = document.querySelector('.total-steps');
+  if (currentStep && totalSteps) {
+    currentStep.textContent = currentIndex + 1;
+    totalSteps.textContent = totalQuestions;
+  }
 }
 
 // 1分診断を開始する関数
@@ -104,6 +166,18 @@ function startQuickDiagnosis() {
   
   // 1問目の質問のみを表示
   document.getElementById('step1').style.display = 'block';
+  
+  // 進捗バーを表示
+  const progressTemplate = document.getElementById('progress-template');
+  const progressElement = progressTemplate.content.cloneNode(true);
+  document.body.appendChild(progressElement);
+  
+  // 進捗バーを更新（1分診断は6問）
+  const totalSteps = document.querySelector('.total-steps');
+  if (totalSteps) {
+    totalSteps.textContent = '6';
+  }
+  updateProgress('carrier');
   
   // 回答をリセット
   answers = {
@@ -133,6 +207,18 @@ function startDetailedDiagnosis() {
   
   // 1問目の質問のみを表示
   document.getElementById('step1').style.display = 'block';
+  
+  // 進捗バーを表示
+  const progressTemplate = document.getElementById('progress-template');
+  const progressElement = progressTemplate.content.cloneNode(true);
+  document.body.appendChild(progressElement);
+  
+  // 進捗バーを更新（3分診断は11問）
+  const totalSteps = document.querySelector('.total-steps');
+  if (totalSteps) {
+    totalSteps.textContent = '11';
+  }
+  updateProgress('carrier');
   
   // 回答をリセット
   answers = {
@@ -168,6 +254,15 @@ function nextStep() {
     if (currentStep + 1 === 6) {
       updateStep6Buttons();
     }
+    // 質問11（3分診断の最後）に到達した場合は結果ボタンを表示
+    if (currentStep + 1 === 11 && diagnosisType === 'detailed') {
+      updateStep11Buttons();
+    }
+    
+    // 進捗バーを更新
+    const questionKeys = Object.keys(questions);
+    const nextQuestionId = questionKeys[currentStep];
+    updateProgress(nextQuestionId);
   }
 }
 
@@ -181,6 +276,11 @@ function goBack(step) {
   if (step === 6) {
     updateStep6Buttons();
   }
+  
+  // 進捗バーを更新
+  const questionKeys = Object.keys(questions);
+  const currentQuestionId = questionKeys[step - 1];
+  updateProgress(currentQuestionId);
 }
 
 // 回答を設定する関数
@@ -195,8 +295,12 @@ function setAnswer(key, value) {
   if (currentStep < 11 || diagnosisType === 'quick') {
     nextStep();
   } else if (currentStep === 11 && diagnosisType === 'detailed') {
-    // 3分診断の最後のステップの場合は結果表示
-    calculateDetailedResult();
+    // 3分診断の最後のステップの場合は自動遷移しない
+    // 診断結果を見るボタンを表示
+    const resultButton = document.querySelector('#step11 .cta-button');
+    if (resultButton) {
+      resultButton.style.display = 'block';
+    }
   }
 }
 
@@ -213,18 +317,16 @@ function setSatisfaction(btn, value) {
   // 満足度を保存
   answers.satisfaction = value;
   
-  // 診断タイプに応じてボタンの表示を更新
-  const resultButton = document.querySelector('#step6 .cta-button');
-  const nextButton = document.querySelector('#step6 .next-button');
-  
+  // 診断タイプに応じて処理を分岐
   if (diagnosisType === 'quick') {
     // 1分診断の場合
+    const resultButton = document.querySelector('#step6 .cta-button');
+    const nextButton = document.querySelector('#step6 .next-button');
     resultButton.style.display = 'block';
     if (nextButton) nextButton.style.display = 'none';
   } else {
-    // 3分診断の場合
-    resultButton.style.display = 'none';
-    if (nextButton) nextButton.style.display = 'block';
+    // 3分診断の場合は自動的に次の質問へ
+    nextStep();
   }
 }
 
@@ -238,9 +340,9 @@ function updateStep6Buttons() {
     resultButton.style.display = 'block';
     if (nextButton) nextButton.style.display = 'none';
   } else {
-    // 3分診断の場合
+    // 3分診断の場合は「次へ」ボタンを非表示
     resultButton.style.display = 'none';
-    if (nextButton) nextButton.style.display = 'block';
+    if (nextButton) nextButton.style.display = 'none';
   }
 }
 
@@ -413,6 +515,12 @@ function displayResults(recommendedPlans, additionalInfo = []) {
     ? `年間で${savingsAmountSpan}円も安くなる可能性があります！`
     : `年間で${savingsAmountSpan}円安くなる可能性があります！`;
 
+  // 進捗バーを非表示
+  const progressBar = document.querySelector('.progress-container');
+  if (progressBar) {
+    progressBar.remove();
+  }
+
   document.getElementById('resultText').innerHTML = savingsText;
   const isCashbackEligible = carrier !== 'ソフトバンク' && carrier !== 'ワイモバイル';
   document.getElementById('cashbackText').innerHTML = isCashbackEligible ? 
@@ -495,6 +603,12 @@ function goToTop() {
     button.style.background = '#4a90e2';
   });
   
+  // 進捗バーを削除
+  const progressBar = document.querySelector('.progress-container');
+  if (progressBar) {
+    progressBar.remove();
+  }
+  
   // すべての画面を非表示にし、スタート画面のみ表示
   document.querySelectorAll('.container > div').forEach(div => {
     div.style.display = 'none';
@@ -506,4 +620,47 @@ function goToTop() {
   
   // 結果画面を非表示
   document.getElementById('result').style.display = 'none';
+}
+
+// ステップ11のボタン表示を更新する関数
+function updateStep11Buttons() {
+  const resultButton = document.querySelector('#step11 .cta-button');
+  const nextButton = document.querySelector('#step11 .next-button');
+  
+  if (resultButton) {
+    resultButton.style.display = 'block';
+  }
+  if (nextButton) {
+    nextButton.style.display = 'none';
+  }
+}
+
+// 支払い方法を設定する関数
+function setPayment(btn, value) {
+  // 他のボタンの選択を解除
+  btn.parentElement.querySelectorAll('button').forEach(button => {
+    button.style.background = DEFAULT_BUTTON_COLOR;
+  });
+  
+  // 選択したボタンをハイライト
+  btn.style.background = SELECTED_BUTTON_COLOR;
+  
+  // 支払い方法を保存
+  answers.payment = value;
+  
+  // 診断結果を見るボタンを表示
+  const resultButton = document.querySelector('#step11 .cta-button');
+  if (resultButton) {
+    resultButton.style.display = 'block';
+  }
+}
+
+// 3分診断の結果を表示する関数
+function showDetailedResult() {
+  // 最後の質問の回答が選択されているか確認
+  if (!answers.payment) {
+    alert('支払い方法を選択してください。');
+    return;
+  }
+  calculateDetailedResult();
 }

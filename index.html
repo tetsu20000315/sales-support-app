@@ -10,6 +10,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+  <!-- 進捗バーのテンプレート -->
+  <template id="progress-template">
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="progress-text">質問 <span class="current-step">1</span>/<span class="total-steps">6</span></div>
+    </div>
+  </template>
+
   <div class="container">
     <!-- 履歴ボタン -->
     <button id="historyButton" class="history-button">
@@ -23,6 +33,7 @@
       <div class="input-box">
         <button onclick="startQuickDiagnosis()">1分診断</button>
         <button onclick="startDetailedDiagnosis()">3分診断</button>
+        <button onclick="showDetailedInfoInput()">詳細情報入力</button>
       </div>
     </div>
 
@@ -112,9 +123,11 @@
         <button onclick="setSatisfaction(this, 90)">90%</button>
         <button onclick="setSatisfaction(this, 100)">100%</button>
       </div>
-      <button class="cta-button" onclick="calculateResult()" style="display: none;">診断結果を見る</button>
-      <button class="next-button" onclick="nextStep()" style="display: none;">次へ</button>
-      <button class="back-button" onclick="goBack(5)">戻る</button>
+      <div class="button-container">
+        <button class="cta-button" onclick="calculateResult()" style="display: none;">診断結果を見る</button>
+        <button class="next-button" onclick="nextStep()" style="display: none;">次へ</button>
+        <button class="back-button" onclick="goBack(5)">戻る</button>
+      </div>
     </div>
 
     <!-- 質問7: 通話時間（3分診断のみ） -->
@@ -176,9 +189,9 @@
     <div id="step11" style="display: none;">
       <h2>端末の支払い方法を教えてください</h2>
       <div class="input-box">
-        <button onclick="setAnswer('payment', '一括払い')">一括払い</button>
-        <button onclick="setAnswer('payment', '分割払い')">分割払い</button>
-        <button onclick="setAnswer('payment', '端末代なし')">端末代なし</button>
+        <button onclick="setPayment(this, '一括払い')">一括払い</button>
+        <button onclick="setPayment(this, '分割払い')">分割払い</button>
+        <button onclick="setPayment(this, '端末代なし')">端末代なし</button>
       </div>
       <button class="cta-button" onclick="calculateDetailedResult()">診断結果を見る</button>
       <button class="back-button" onclick="goBack(10)">戻る</button>
@@ -219,6 +232,89 @@
       <div id="historyList"></div>
       <button id="clearHistoryButton" class="clear-history">履歴を削除</button>
       <button id="closeHistoryButton" class="history-menu-button">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 詳細情報入力モーダル -->
+  <div id="detailedInfoModal" class="modal">
+    <div class="modal-content">
+      <h2>詳細情報</h2>
+      <div class="table-container">
+        <table id="familyTable">
+          <thead>
+            <tr>
+              <th>家族<br>構成</th>
+              <th>キャリア</th>
+              <th>料金</th>
+              <th>年齢</th>
+              <th>名義</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="familyTableBody">
+            <!-- 家族メンバーの行がここに動的に追加されます -->
+          </tbody>
+        </table>
+      </div>
+      <div class="button-container">
+        <button onclick="addFamilyMember()" class="add-member-button">家族メンバーを追加</button>
+        <button onclick="closeDetailedInfoModal()" class="close-button">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 家族メンバー編集モーダル -->
+  <div id="editMemberModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 id="editMemberTitle">メンバー情報</h2>
+        <button onclick="deleteMember()" class="delete-button">削除</button>
+      </div>
+      <div class="edit-form-container">
+        <div class="form-group">
+          <label for="editRole">家族構成</label>
+          <select id="editRole">
+            <option value="">選択してください</option>
+            <option value="父">父</option>
+            <option value="母">母</option>
+            <option value="長男">長男</option>
+            <option value="次男">次男</option>
+            <option value="長女">長女</option>
+            <option value="次女">次女</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="editCarrier">キャリア</label>
+          <select id="editCarrier">
+            <option value="">選択してください</option>
+            <option value="ソフトバンク">ソフトバンク</option>
+            <option value="ワイモバイル">ワイモバイル</option>
+            <option value="au">au</option>
+            <option value="UQモバイル">UQモバイル</option>
+            <option value="docomo">docomo</option>
+            <option value="ahamo">ahamo</option>
+            <option value="楽天モバイル">楽天モバイル</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="editPrice">料金</label>
+          <input type="number" id="editPrice" placeholder="料金を入力">
+        </div>
+        <div class="form-group">
+          <label for="editAge">年齢</label>
+          <input type="number" id="editAge" placeholder="年齢を入力">
+        </div>
+        <div class="form-group">
+          <label for="editAccountHolder">名義人</label>
+          <input type="text" id="editAccountHolder" placeholder="名義人を入力">
+        </div>
+      </div>
+      <div class="button-container">
+        <button onclick="saveMemberEdit()" class="save-button">保存</button>
+        <button onclick="closeEditModal()" class="close-button">キャンセル</button>
+      </div>
     </div>
   </div>
 
